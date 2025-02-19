@@ -137,8 +137,15 @@ function showForm() {
 
 function showLoading() {
     document.getElementById('form-container').classList.remove('active');
+    document.getElementById('loading-container').style.display = 'flex';
     document.getElementById('loading-container').classList.add('active');
-    document.getElementById('results').classList.remove('active');
+    
+    // Hide loading and show results after 2 seconds
+    setTimeout(() => {
+        document.getElementById('loading-container').style.display = 'none';
+        document.getElementById('loading-container').classList.remove('active');
+        document.getElementById('results').classList.add('active');
+    }, 2000);
 }
 
 function showResults() {
@@ -316,6 +323,7 @@ function initFormHandler() {
     const form = document.getElementById('race-form');
     form.addEventListener('submit', (e) => {
         e.preventDefault();
+        showLoading();
         document.getElementById('calculate').click();
     });
 }
@@ -325,18 +333,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load VDOT data
     initializeVDOTData();
     
-    // Ensure form is visible initially
-    showForm();
-
-    // Reset button click handler
-    document.getElementById('reset').addEventListener('click', function() {
-        document.getElementById('predictions-body').innerHTML = '';
-        showForm();
-    });
-
+    // Initialize all form elements
     initStopwatchInputs();
     initDistanceButtons();
     initFormHandler();
+    
+    // Make sure form is visible and loading is hidden initially
+    document.getElementById('form-container').classList.add('active');
+    document.getElementById('loading-container').classList.remove('active');
+    document.getElementById('results').classList.remove('active');
 });
 
 function showError(message) {
