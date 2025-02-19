@@ -3,7 +3,7 @@ let VDOT_TABLE = null;
 // Fetch VDOT data when the page loads
 async function initializeVDOTData() {
     try {
-        const response = await fetch('../data/vdot-tables.json');
+        const response = await fetch('data/vdot-tables.json');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -21,8 +21,6 @@ async function initializeVDOTData() {
 const PERCENT_VDOT = {
     "1500": 0.98,
     "Mile": 0.97,
-    "3000": 0.96,
-    "2-mile": 0.96,
     "5K": 0.95,
     "10K": 0.92,
     "15K": 0.90,
@@ -32,7 +30,9 @@ const PERCENT_VDOT = {
 
 // Utility functions
 function timeToSeconds(hours, minutes, seconds) {
-    return hours * 3600 + minutes * 60 + seconds;
+    const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+    console.log(`Converting ${hours}:${minutes}:${seconds} to ${totalSeconds} seconds`);
+    return totalSeconds;
 }
 
 function formatTime(seconds) {
@@ -48,29 +48,37 @@ function calculateVDOT(distance, timeInSeconds) {
         throw new Error('VDOT data not loaded');
     }
 
+    console.log(`Calculating VDOT for distance: ${distance}, time: ${timeInSeconds} seconds`);
+
     const vdotValues = Object.keys(VDOT_TABLE).map(Number);
     
-    let closestVDOT = vdotValues[0];
-    let smallestTimeDiff = Math.abs(VDOT_TABLE[vdotValues[0]][distance] - timeInSeconds);
+    // Check if the time is faster than the fastest time in the table
+    const highestVDOT = Math.max(...vdotValues);
+    const fastestPossibleTime = VDOT_TABLE[highestVDOT][distance];
+    
+    if (timeInSeconds < fastestPossibleTime) {
+        throw new Error(`Time of ${formatTime(timeInSeconds)} is beyond the scope of our predictions (faster than VDOT ${highestVDOT}). The fastest time we can predict for is ${formatTime(fastestPossibleTime)} for ${distance}.`);
+    }
+
+    // Find the closest VDOT value by comparing actual times in the table
+    let bestVDOT = null;
+    let smallestDiff = Infinity;
     
     for (let vdot of vdotValues) {
-        const timeDiff = Math.abs(VDOT_TABLE[vdot][distance] - timeInSeconds);
-        if (timeDiff < smallestTimeDiff) {
-            smallestTimeDiff = timeDiff;
-            closestVDOT = vdot;
+        const tableTime = VDOT_TABLE[vdot][distance];
+        const diff = Math.abs(tableTime - timeInSeconds);
+        
+        console.log(`VDOT ${vdot}: table time = ${tableTime}s, diff = ${diff}s`);
+        
+        if (diff < smallestDiff) {
+            smallestDiff = diff;
+            bestVDOT = vdot;
         }
     }
     
-    const lowerVDOT = Math.floor(closestVDOT);
-    const upperVDOT = Math.ceil(closestVDOT);
+    console.log(`Selected VDOT: ${bestVDOT}`);
     
-    if (lowerVDOT === upperVDOT) return lowerVDOT;
-    
-    const lowerTime = VDOT_TABLE[lowerVDOT][distance];
-    const upperTime = VDOT_TABLE[upperVDOT][distance];
-    const ratio = (lowerTime - timeInSeconds) / (lowerTime - upperTime);
-    
-    return lowerVDOT + ratio;
+    return bestVDOT;
 }
 
 function interpolateTime(vdot, targetDistance) {
@@ -100,83 +108,247 @@ function validateInputs(hours, minutes, seconds, recentDistance) {
     if (isNaN(seconds) || seconds < 0 || seconds > 59) errors.push("Seconds must be between 0 and 59");
     
     const totalSeconds = timeToSeconds(hours, minutes, seconds);
-    if (totalSeconds === 0) errors.push("Total time must be greater than zero");
+    if (totalSeconds === 0) errors.push("Please enter a valid time");
+
+    // Add reasonable minimum times based on distance
+    const minTimes = {
+        "1500": 180,  // 3 minutes
+        "Mile": 200,  // 3:20
+        "5K": 600,    // 10 minutes
+        "10K": 1200,  // 20 minutes
+        "15K": 2100,  // 35 minutes
+        "HM": 2700,   // 45 minutes
+        "M": 5400     // 1:30:00
+    };
+
+    if (recentDistance && totalSeconds < minTimes[recentDistance]) {
+        errors.push(`Time seems too short for ${recentDistance}. Please check your input.`);
+    }
 
     return errors;
 }
 
-// Initialize event listeners when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    // Load VDOT data
-    initializeVDOTData();
+// Add these new functions at the top
+function showForm() {
+    document.getElementById('form-container').classList.add('active');
+    document.getElementById('loading-container').classList.remove('active');
+    document.getElementById('results').classList.remove('active');
+}
 
-    // Calculate button click handler
-    document.getElementById('calculate').addEventListener('click', function() {
-        console.log('Calculate button clicked');
+function showLoading() {
+    document.getElementById('form-container').classList.remove('active');
+    document.getElementById('loading-container').classList.add('active');
+    document.getElementById('results').classList.remove('active');
+}
+
+function showResults() {
+    document.getElementById('form-container').classList.remove('active');
+    document.getElementById('loading-container').classList.remove('active');
+    document.getElementById('results').classList.add('active');
+}
+
+// Stopwatch input handling
+function initStopwatchInputs() {
+    const inputs = ['hours', 'minutes', 'seconds'];
+    
+    inputs.forEach((id, index) => {
+        const input = document.getElementById(id);
+        
+        // Add keydown event listener for Enter key
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (index < inputs.length - 1) {
+                    // Move to next input if not on last input
+                    document.getElementById(inputs[index + 1]).focus();
+                } else {
+                    // Trigger calculate if on last input
+                    document.getElementById('calculate').click();
+                }
+            }
+            // Existing backspace handler
+            if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
+                document.getElementById(inputs[index - 1]).focus();
+            }
+        });
+
+        input.addEventListener('input', (e) => {
+            let value = e.target.value;
+            
+            // Remove any non-digits
+            value = value.replace(/\D/g, '');
+            
+            // Validate max values
+            let max = 59;
+            if (id === 'hours') max = 23;
+            
+            // Handle the value
+            const numValue = parseInt(value);
+            if (!isNaN(numValue)) {
+                // Enforce max value
+                if (numValue > max) {
+                    value = max.toString();
+                }
+                
+                // Enforce max length of 2
+                if (value.length > 2) {
+                    value = value.slice(0, 2);
+                }
+                
+                // Only auto-advance if user explicitly entered 2 digits
+                if (value.length === 2 && e.inputType === 'insertText' && index < inputs.length - 1) {
+                    document.getElementById(inputs[index + 1]).focus();
+                }
+            }
+            
+            // Update the input value
+            e.target.value = value;
+        });
+    });
+
+    // Reset button enhancement
+    document.getElementById('reset').addEventListener('click', () => {
+        inputs.forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('hours').focus();
+    });
+}
+
+function createPredictionModule(distance, time) {
+    const module = document.createElement('div');
+    module.className = 'prediction-module';
+    
+    const wreath = document.createElement('div');
+    wreath.className = 'wreath';
+    
+    const distanceLabel = document.createElement('div');
+    distanceLabel.className = 'distance-label';
+    distanceLabel.textContent = distance;
+    
+    const predictedTime = document.createElement('div');
+    predictedTime.className = 'predicted-time';
+    predictedTime.textContent = time;
+    
+    module.appendChild(wreath);
+    module.appendChild(distanceLabel);
+    module.appendChild(predictedTime);
+    
+    return module;
+}
+
+function initDistanceButtons() {
+    const buttons = document.querySelectorAll('.distance-btn');
+    let selectedDistance = null;
+    
+    buttons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+            selectedDistance = button.dataset.value;
+        });
+    });
+
+    document.getElementById('calculate').addEventListener('click', async function() {
         try {
             if (!VDOT_TABLE) {
                 throw new Error('VDOT data not loaded yet');
             }
-            const hours = parseInt(document.getElementById('hours').value) || 0;
-            const minutes = parseInt(document.getElementById('minutes').value) || 0;
-            const seconds = parseInt(document.getElementById('seconds').value) || 0;
-            const recentDistance = document.getElementById('recent-distance').value;
+            
+            // Parse values with explicit 0 defaults and trim any whitespace
+            const hours = parseInt(document.getElementById('hours').value.trim()) || 0;
+            const minutes = parseInt(document.getElementById('minutes').value.trim()) || 0;
+            const seconds = parseInt(document.getElementById('seconds').value.trim()) || 0;
 
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '';
+            console.log(`Input time: ${hours}:${minutes}:${seconds}`);
 
-            const errors = validateInputs(hours, minutes, seconds, recentDistance);
+            if (!selectedDistance) {
+                throw new Error('Please select a race distance');
+            }
+
+            const errors = validateInputs(hours, minutes, seconds, selectedDistance);
             if (errors.length > 0) {
+                const resultsDiv = document.getElementById('results');
                 resultsDiv.innerHTML = `<div class="error">${errors.join('<br>')}</div>`;
+                showResults();
                 return;
             }
 
+            showLoading();
+
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
             const totalSeconds = timeToSeconds(hours, minutes, seconds);
-            const vdot = calculateVDOT(recentDistance, totalSeconds);
+            console.log(`Total seconds: ${totalSeconds}`);
             
-            // Get all available distances
+            const vdot = calculateVDOT(selectedDistance, totalSeconds);
+            console.log(`Calculated VDOT: ${vdot}`);
+            
             const distances = Object.keys(PERCENT_VDOT);
             
-            // Generate predictions for all distances
-            const predictions = distances
-                .filter(distance => distance !== recentDistance)
-                .map(distance => {
+            const predictionsContainer = document.getElementById('predictions-container');
+            predictionsContainer.innerHTML = '';
+            
+            distances
+                .filter(distance => distance !== selectedDistance)
+                .forEach(distance => {
                     const predictedSeconds = interpolateTime(vdot, distance);
-                    return `
-                        <tr>
-                            <td>${distance}</td>
-                            <td>${formatTime(predictedSeconds)}</td>
-                        </tr>
-                    `;
-                }).join('');
+                    console.log(`Predicted time for ${distance}: ${predictedSeconds}s`);
+                    const module = createPredictionModule(distance, formatTime(predictedSeconds));
+                    predictionsContainer.appendChild(module);
+                });
 
-            resultsDiv.innerHTML = `
-                <h2>🎯 Race Predictions 🎯</h2>
-                <p>Based on your ${recentDistance} time of ${formatTime(totalSeconds)}</p>
-                <p>🌟 Your VDOT: ${vdot.toFixed(1)} 🌟</p>
-                <table class="predictions-table">
-                    <thead>
-                        <tr>
-                            <th>Distance</th>
-                            <th>Predicted Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${predictions}
-                    </tbody>
-                </table>
-                <p style="font-size: 1.2rem; color: #7f8c8d; margin-top: 1rem;">Keep running! 🎉</p>
-            `;
+            showResults();
+
         } catch (error) {
             console.error('Error:', error);
-            document.getElementById('results').innerHTML = `
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
                 <div class="error">An error occurred: ${error.message}</div>
             `;
+            showResults();
         }
     });
+}
+
+// Add form submit handler
+function initFormHandler() {
+    const form = document.getElementById('race-form');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        document.getElementById('calculate').click();
+    });
+}
+
+// Update the DOMContentLoaded event listener
+document.addEventListener('DOMContentLoaded', function() {
+    // Load VDOT data
+    initializeVDOTData();
+    
+    // Ensure form is visible initially
+    showForm();
 
     // Reset button click handler
     document.getElementById('reset').addEventListener('click', function() {
-        document.getElementById('results').innerHTML = '';
+        document.getElementById('predictions-body').innerHTML = '';
+        showForm();
     });
-}); 
+
+    initStopwatchInputs();
+    initDistanceButtons();
+    initFormHandler();
+});
+
+function showError(message) {
+    // Remove any existing error
+    const existingError = document.querySelector('.error');
+    if (existingError) {
+        existingError.remove();
+    }
+
+    // Create and show new error
+    const error = document.createElement('div');
+    error.className = 'error';
+    error.textContent = message;
+    document.querySelector('.form-group').appendChild(error);
+} 

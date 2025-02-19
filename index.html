@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Race Time Predictor</title>
+    <title>DR's Race Predictor</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,131 +12,123 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Press Start 2P', system-ui, -apple-system, sans-serif;
             line-height: 1.6;
             padding: 20px;
-            background-color: #3498db; /* Runner's blue color */
-            background-image: linear-gradient(45deg, #3498db, #2980b9);
+            background: #111 url('https://i.gifer.com/SlxH.gif') repeat;
+            background-size: 250px 250px;
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        @keyframes running-background {
+            from {
+                background-position: 0 0;
+            }
+            to {
+                background-position: -150px -150px;
+            }
         }
 
         .container {
+            width: 100%;
             max-width: 600px;
-            margin: 0 auto;
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(26, 16, 37, 0.95);
             padding: 2rem;
             border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .container::before {
-            content: "🏃 🏃‍♀️ 🏃 🏃‍♀️";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 10px;
-            font-size: 24px;
-            text-align: center;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
-        }
-
-        .container::after {
-            content: "🏃‍♀️ 🏃 🏃‍♀️ 🏃";
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 10px;
-            font-size: 24px;
-            text-align: center;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+            border: 2px solid #4f8fff;
+            box-shadow: 0 0 20px rgba(79, 143, 255, 0.3),
+                        inset 0 0 20px rgba(79, 143, 255, 0.2);
         }
 
         h1 {
             text-align: center;
-            color: #2c3e50;
-            margin: 2.5rem 0 1.5rem;
-            font-size: 2.2rem;
-            position: relative;
-            display: inline-block;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        h1::before {
-            content: "🏃";
-            margin-right: 10px;
-        }
-
-        h1::after {
-            content: "🏃‍♀️";
-            margin-left: 10px;
+            color: #4f8fff;
+            margin-bottom: 2rem;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(79, 143, 255, 0.5);
+            letter-spacing: 2px;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
-            position: relative;
+            margin-bottom: 2rem;
         }
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: #2c3e50;
-            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #4f8fff;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            text-shadow: 1px 1px #003300;
         }
 
         select, input {
             width: 100%;
-            padding: 0.7rem;
-            border: 2px solid #bdc3c7;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
-            transition: all 0.3s;
             background-color: white;
         }
 
         select:focus, input:focus {
-            border-color: #3498db;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
 
         .time-inputs {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+            gap: 1rem;
         }
 
         .buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+            gap: 1rem;
             margin-top: 2rem;
         }
 
         button {
-            padding: 0.9rem;
+            padding: 0.8rem;
             border: none;
             border-radius: 8px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s;
+            font-size: 1rem;
             font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        #calculate, #reset, .back-button, .get-faster-button {
+            font-family: 'Press Start 2P', monospace;
+            padding: 1rem;
+            border: 3px solid #444;
+            border-radius: 4px;
+            font-size: 0.8rem;
             text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            background-color: #333;
+            color: #00ff00;
+            text-shadow: 1px 1px #003300;
+        }
+
+        #calculate:hover, #reset:hover, .back-button:hover, .get-faster-button:hover {
+            transform: scale(1.05);
+            background-color: #444;
         }
 
         #calculate {
-            background-color: #e67e22; /* Runner's orange/peach color */
-            color: white;
+            background-color: #003300;
         }
 
         #calculate:hover {
-            background-color: #d35400;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(230, 126, 34, 0.3);
+            background-color: #004400;
         }
 
         #reset {
@@ -146,27 +138,67 @@
 
         #reset:hover {
             background-color: #7f8c8d;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
         }
 
-        #results {
-            margin-top: 2.5rem;
-            padding-top: 1.5rem;
-            border-top: 2px dashed #bdc3c7;
+        .loading-container {
             text-align: center;
+            padding: 2rem;
         }
 
-        #results h2 {
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #f39c12;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .result-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .back-button, .get-faster-button {
+            width: 100%;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .predictions-table {
+            width: 100%;
+            margin: 1.5rem 0;
+            border-collapse: collapse;
+            color: #00ff00;
+            font-size: 0.8rem;
+        }
+
+        .predictions-table th,
+        .predictions-table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #003300;
+        }
+
+        .predictions-table th {
+            font-weight: 600;
             color: #2c3e50;
-            margin-bottom: 1rem;
         }
 
-        #results h3 {
-            color: #e67e22 !important;
-            font-size: 2.5rem !important;
-            margin: 1.5rem 0 !important;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        .predictions-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .predictions-table tr:hover {
+            background-color: #f8f9fa;
         }
 
         .error {
@@ -188,88 +220,324 @@
             h1 {
                 font-size: 1.8rem;
             }
-            
-            .container::before,
-            .container::after {
-                font-size: 18px;
-            }
         }
 
-        .predictions-table {
-            width: 100%;
-            margin: 1.5rem 0;
-            border-collapse: collapse;
-            background-color: white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        .emoji-header {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        #form-container, #loading-container, #results {
+            display: none;
+        }
+
+        #form-container.active, #loading-container.active, #results.active {
+            display: block;
+        }
+
+        .stopwatch {
+            background-color: #222;
             border-radius: 8px;
-            overflow: hidden;
+            padding: 20px;
+            margin: 20px 0;
+            border: 3px solid #444;
         }
 
-        .predictions-table th,
-        .predictions-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
+        .stopwatch-display {
+            background-color: #001100;
+            padding: 15px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Digital-7', monospace;
+            font-size: 2.5rem;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
         }
 
-        .predictions-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #2c3e50;
+        .stopwatch-display input {
+            background: transparent;
+            border: none;
+            width: 60px;
+            text-align: center;
+            font-family: inherit;
+            font-size: inherit;
+            color: #00ff00;
+            padding: 0;
         }
 
-        .predictions-table tr:last-child td {
-            border-bottom: none;
+        .separator {
+            color: #00ff00;
         }
 
-        .predictions-table tr:hover {
-            background-color: #f8f9fa;
+        @font-face {
+            font-family: 'Digital-7';
+            src: url('https://fonts.cdnfonts.com/css/digital-7-mono') format('woff2');
+        }
+
+        /* Override the previous input styles for stopwatch inputs */
+        .stopwatch-display input::-webkit-inner-spin-button,
+        .stopwatch-display input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .stopwatch-display input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .distance-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .distance-btn {
+            background-color: rgba(26, 16, 37, 0.95);
+            color: #4f8fff;
+            border: 1px solid #4f8fff;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-shadow: 1px 1px #003300;
+        }
+
+        .distance-btn:hover {
+            background-color: #555;
+            transform: scale(1.05);
+        }
+
+        .distance-btn.selected {
+            background-color: #4f8fff;
+            color: #1a1025;
+            border-color: #00cc00;
+            text-shadow: none;
+        }
+
+        .emoji-header {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        #form-container, #loading-container, #results {
+            display: none;
+        }
+
+        #form-container.active, #loading-container.active, #results.active {
+            display: block;
+        }
+
+        .stopwatch {
+            background-color: #000;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .stopwatch-display {
+            background-color: #e0e0c7;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Digital-7', monospace;
+            font-size: 2.5rem;
+        }
+
+        .stopwatch-display input {
+            background: transparent;
+            border: none;
+            width: 60px;
+            text-align: center;
+            font-family: inherit;
+            font-size: inherit;
+            color: #000;
+            padding: 0;
+        }
+
+        .stopwatch-display input:focus {
+            outline: none;
+            box-shadow: none;
+            border: none;
+        }
+
+        .separator {
+            margin: 0 2px;
+            color: #000;
+        }
+
+        @font-face {
+            font-family: 'Digital-7';
+            src: url('https://fonts.cdnfonts.com/css/digital-7-mono') format('woff2');
+        }
+
+        /* Override the previous input styles for stopwatch inputs */
+        .stopwatch-display input::-webkit-inner-spin-button,
+        .stopwatch-display input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .stopwatch-display input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .distance-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .distance-btn {
+            background-color: #000;
+            color: #e0e0c7;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Digital-7', monospace;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .distance-btn:hover {
+            background-color: #333;
+        }
+
+        .distance-btn.selected {
+            background-color: #e0e0c7;
+            color: #000;
+            box-shadow: 0 0 0 2px #000;
+        }
+
+        .predictions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .prediction-module {
+            background: rgba(26, 16, 37, 0.95);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            border: 2px solid #4f8fff;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .prediction-module:hover {
+            transform: translateY(-5px);
+        }
+
+        .wreath {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .wreath::before,
+        .wreath::after {
+            content: '🌿';
+            position: absolute;
+            font-size: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .wreath::before {
+            left: 10px;
+            transform: translateY(-50%) rotate(-30deg);
+        }
+
+        .wreath::after {
+            right: 10px;
+            transform: translateY(-50%) rotate(30deg);
+        }
+
+        .distance-label {
+            color: #4f8fff;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .predicted-time {
+            color: #00ff00;
+            font-size: 1.8rem;
+            font-family: 'Digital-7', monospace;
+            text-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Race Time Predictor</h1>
-        <form id="race-form">
-            <div class="form-group">
-                <label for="recent-distance">Recent Race Distance</label>
-                <select id="recent-distance" required>
-                    <option value="">Select distance</option>
-                    <option value="1500">1500m</option>
-                    <option value="Mile">Mile</option>
-                    <option value="3000">3000m</option>
-                    <option value="2-mile">2 mile</option>
-                    <option value="5K">5K</option>
-                    <option value="10K">10K</option>
-                    <option value="15K">15K</option>
-                    <option value="HM">Half Marathon</option>
-                    <option value="M">Marathon</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Recent Race Time</label>
-                <div class="time-inputs">
-                    <div class="time-input">
-                        <input type="number" id="hours" min="0" max="23" placeholder="HH" required>
-                    </div>
-                    <div class="time-input">
-                        <input type="number" id="minutes" min="0" max="59" placeholder="MM" required>
-                    </div>
-                    <div class="time-input">
-                        <input type="number" id="seconds" min="0" max="59" placeholder="SS" required>
+        <h1>DR's Race Predictor</h1>
+        
+        <div id="form-container" class="active">
+            <form id="race-form">
+                <div class="form-group">
+                    <label>Recent Race Distance</label>
+                    <div class="distance-buttons">
+                        <button type="button" class="distance-btn" data-value="1500">1500m</button>
+                        <button type="button" class="distance-btn" data-value="Mile">Mile</button>
+                        <button type="button" class="distance-btn" data-value="5K">5K</button>
+                        <button type="button" class="distance-btn" data-value="10K">10K</button>
+                        <button type="button" class="distance-btn" data-value="HM">Half</button>
+                        <button type="button" class="distance-btn" data-value="M">Marathon</button>
                     </div>
                 </div>
-            </div>
 
-            <div class="buttons">
-                <button type="button" id="calculate">Calculate</button>
-                <button type="reset" id="reset">Reset</button>
-            </div>
-        </form>
+                <div class="form-group">
+                    <label>Recent Race Time</label>
+                    <div class="stopwatch">
+                        <div class="stopwatch-display">
+                            <input type="text" id="hours" maxlength="2" placeholder="00" inputmode="numeric">
+                            <span class="separator">:</span>
+                            <input type="text" id="minutes" maxlength="2" placeholder="00" inputmode="numeric">
+                            <span class="separator">:</span>
+                            <input type="text" id="seconds" maxlength="2" placeholder="00" inputmode="numeric">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button type="submit" id="calculate">Calculate</button>
+                    <button type="reset" id="reset">Reset</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="loading-container">
+            <div class="loading-spinner"></div>
+            <h3>Calculating your predictions...</h3>
+        </div>
 
         <div id="results">
-            <!-- Results will be displayed here -->
+            <div id="predictions-container" class="predictions-grid">
+                <!-- Results will be inserted here as modules -->
+            </div>
+            <div class="result-actions">
+                <button class="back-button" onclick="showForm()">Back</button>
+                <a href="https://www.instagram.com/mattlopiccolo/" target="_blank">
+                    <button class="get-faster-button">Get Faster</button>
+                </a>
+            </div>
         </div>
     </div>
 
