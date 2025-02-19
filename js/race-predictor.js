@@ -3,7 +3,7 @@ let VDOT_TABLE = null;
 // Fetch VDOT data when the page loads
 async function initializeVDOTData() {
     try {
-        const response = await fetch('./data/vdot-tables.json');
+        const response = await fetch('../data/vdot-tables.json');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
