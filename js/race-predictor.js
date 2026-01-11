@@ -219,6 +219,11 @@ function initStopwatchInputs() {
             document.getElementById(id).value = '';
         });
         document.getElementById('hours').focus();
+
+        // Track reset
+        if (window.Analytics) {
+            Analytics.trackReset();
+        }
     });
 }
 
@@ -253,6 +258,11 @@ function initDistanceButtons() {
             buttons.forEach(btn => btn.classList.remove('selected'));
             button.classList.add('selected');
             selectedDistance = button.dataset.value;
+
+            // Track distance selection
+            if (window.Analytics) {
+                Analytics.trackDistanceSelection(selectedDistance);
+            }
         });
     });
 
@@ -275,6 +285,11 @@ function initDistanceButtons() {
 
             const errors = validateInputs(hours, minutes, seconds, selectedDistance);
             if (errors.length > 0) {
+                // Track validation errors
+                if (window.Analytics) {
+                    Analytics.trackError('validation', errors.join('; '));
+                }
+
                 const resultsDiv = document.getElementById('results');
                 resultsDiv.innerHTML = `<div class="error">${errors.join('<br>')}</div>`;
                 showResults();
@@ -296,19 +311,31 @@ function initDistanceButtons() {
             const predictionsContainer = document.getElementById('predictions-container');
             predictionsContainer.innerHTML = '';
             
-            distances
-                .filter(distance => distance !== selectedDistance)
-                .forEach(distance => {
+            const predictedDistances = distances.filter(distance => distance !== selectedDistance);
+
+            predictedDistances.forEach(distance => {
                     const predictedSeconds = interpolateTime(vdot, distance);
                     console.log(`Predicted time for ${distance}: ${predictedSeconds}s`);
                     const module = createPredictionModule(distance, formatTime(predictedSeconds));
                     predictionsContainer.appendChild(module);
                 });
 
+            // Track successful calculation
+            if (window.Analytics) {
+                Analytics.trackCalculation(selectedDistance, totalSeconds, vdot);
+                Analytics.trackResultsView(selectedDistance, predictedDistances);
+            }
+
             showResults();
 
         } catch (error) {
             console.error('Error:', error);
+
+            // Track error
+            if (window.Analytics) {
+                Analytics.trackError('calculation_error', error.message);
+            }
+
             const resultsDiv = document.getElementById('results');
             resultsDiv.innerHTML = `
                 <div class="error">An error occurred: ${error.message}</div>
